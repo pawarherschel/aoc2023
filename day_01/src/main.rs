@@ -10,6 +10,9 @@ fn main() {
     let i2 = include_str!("./input2.txt");
     let ie2 = include_str!("./example2.txt");
 
+    let test_1 = "twoneight";
+    println!("test 1: {}", part2(test_1));
+
     let example_02 = "281".to_string();
     assert_eq!(example_02, part2(ie2));
     println!("part 2: {}", part2(i2));
