@@ -1,4 +1,11 @@
 #![allow(unused)]
+#![warn(
+    clippy::all,
+    clippy::restriction,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::cargo
+)]
 
 fn main() {
     // i: input
@@ -58,6 +65,7 @@ use std::{
     collections::HashSet,
     ops::{Index, Range},
 };
+
 #[derive(Clone, Debug)]
 enum InputTypes {
     Nothing,
@@ -83,7 +91,7 @@ fn parse(input: &str) -> Vec<InputTypes> {
             if it.is_whitespace() {
                 continue;
             }
-            if it.is_digit(10) {
+            if it.is_ascii_digit() {
                 vec_char.push((idx, it));
                 continue;
             }
@@ -93,7 +101,7 @@ fn parse(input: &str) -> Vec<InputTypes> {
             };
             if !vec_char.is_empty() {
                 output.push({
-                    let op = InputTypes::Number(
+                    InputTypes::Number(
                         vec_char
                             .iter()
                             .min_by(|(idx1, _), (idx2, _)| idx1.cmp(idx2))
@@ -111,16 +119,7 @@ fn parse(input: &str) -> Vec<InputTypes> {
                             .collect::<String>()
                             .parse()
                             .unwrap(),
-                    );
-                    if let InputTypes::Number(r, 58) = op.clone() {
-                        (
-                            &vec_char,
-                            &r,
-                            idx_to_cord(r.start, 10),
-                            idx_to_cord(r.end - 1, 10),
-                        );
-                    }
-                    op
+                    )
                 });
                 vec_char.clear()
             }
@@ -157,9 +156,6 @@ fn part1(input: &str) -> String {
         .into_iter()
         .flat_map(|(idx, _c)| {
             let current_cords = idx_to_cord(idx, width);
-            if current_cords.0 > 1000 || current_cords.1 > 1000 {
-                (&current_cords, idx);
-            }
             let cords = (-1..2)
                 .flat_map(|y_off| {
                     (-1..2)
@@ -193,9 +189,6 @@ fn part1(input: &str) -> String {
                     .iter()
                     .filter(|(range, _)| range.contains(&idx));
                 for it in filtered_list {
-                    if it.1 == 58 {
-                        (it, &nums, idx, &cords, current_cords, _c);
-                    }
                     nums.insert(it.clone());
                 }
             }
@@ -235,9 +228,6 @@ fn part2(input: &str) -> String {
         .into_iter()
         .map(|(idx, _c)| {
             let current_cords = idx_to_cord(idx, width);
-            if current_cords.0 > 1000 || current_cords.1 > 1000 {
-                (&current_cords, idx);
-            }
             let cords = (-1..2)
                 .flat_map(|y_off| {
                     (-1..2)
@@ -271,9 +261,6 @@ fn part2(input: &str) -> String {
                     .iter()
                     .filter(|(range, _)| range.contains(&idx));
                 for it in filtered_list {
-                    if it.1 == 58 {
-                        (it, &nums, idx, &cords, current_cords, _c);
-                    }
                     nums.insert(it.clone());
                 }
             }
