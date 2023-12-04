@@ -1,6 +1,8 @@
 #![allow(unused)]
 
-use std::{collections::HashMap, ops::Deref};
+use indicatif::*;
+use rayon::prelude::*;
+use std::collections::HashMap;
 
 fn main() {
     // i: input
@@ -11,59 +13,139 @@ fn main() {
 
     let i1 = include_str!("i1.txt").trim();
     let e1 = include_str!("e1.txt").trim();
-    let ga1 = "13";
+    let ga1 = format!("{:?}", "13");
     let ga1 = ga1.to_string();
+    let ca1 = format!("{:?}", "21213");
+    let ca1 = ca1.to_string();
 
     let i2 = include_str!("i2.txt").trim();
     let e2 = include_str!("e2.txt").trim();
     let ga2 = "30";
     let ga2 = ga2.to_string();
+    let ca2 = "8549735";
+    let ca2 = ca2.to_string();
 
     if e1.is_empty() {
         panic!("e1.txt empty dumbass");
     }
-    let ea1 = part1(e1);
+    let ea1 = format!("{:?}", part1(e1));
     assert!(!ga1.is_empty(), "ga1 empty dumbass");
-    assert_eq!(ga1, ea1);
+    assert_eq!(
+        ga1,
+        ea1,
+        "{}",
+        if let (Ok(ga1), Ok(ea1)) = (ga1.parse::<u64>(), ea1.parse::<u64>()) {
+            if ga1 > ea1 {
+                format!("ga1: {ga1} > ea1: {ea1}")
+            } else if ga1 < ea1 {
+                format!("ga1: {ga1} < ea1: {ea1}")
+            } else {
+                unreachable!()
+            }
+        } else if let (Ok(ga1), Ok(ea1)) = (ga1.parse::<f64>(), ea1.parse::<f64>()) {
+            if ga1 > ea1 {
+                format!("ga1: {ga1} > ea1: {ea1}")
+            } else if ga1 < ea1 {
+                format!("ga1: {ga1} < ea1: {ea1}")
+            } else {
+                unreachable!()
+            }
+        } else {
+            format!("parsing failed")
+        }
+    );
+    println!("ga1: {ga1} == ea1: {ea1}");
     if i1.is_empty() {
         panic!("i1.txt empty dumbass");
     }
-    let a1 = part1(i1);
+    let a1 = format!("{:?}", part1(i1));
     println!("--- PART1: {a1}");
-    let ca1 = "21213";
-    let ca1 = ca1.to_string();
     if ca1.is_empty() {
         panic!("save the answer in ca1 before you f up");
     }
-    assert_eq!(ca1, a1);
+    assert_eq!(ca1, a1, "answer differs");
 
     if e2.is_empty() {
         panic!("e2.txt empty dumbass");
     }
     let ea2 = format!("{:?}", part2(e2));
     assert_ne!(ga2, "", "ga2 empty dumbass");
-    assert_eq!(ga2, ea2);
+    assert_eq!(
+        ga2,
+        ea2,
+        "{}",
+        if let (Ok(ga2), Ok(ea2)) = (ga2.parse::<u64>(), ea2.parse::<u64>()) {
+            if ga2 > ea2 {
+                format!("ga2: {ga2} > ea2: {ea2}\nYour answer is less than expected answer")
+            } else if ga2 < ea2 {
+                format!("ga2: {ga2} < ea2: {ea2}\nYour answer is more than expected answer")
+            } else {
+                unreachable!()
+            }
+        } else if let (Ok(ga2), Ok(ea2)) = (ga2.parse::<f64>(), ea2.parse::<f64>()) {
+            if ga2 > ea2 {
+                format!("ga2: {ga2} > ea2: {ea2}")
+            } else if ga2 < ea2 {
+                format!("ga2: {ga2} < ea2: {ea2}")
+            } else {
+                unreachable!()
+            }
+        } else {
+            format!("parsing failed")
+        }
+    );
+    println!("ga2: {ga2} == ea2: {ea2}");
     if i2.is_empty() {
         panic!("i2.txt empty dumbass");
     }
     let a2 = format!("{:?}", part2(i2));
-    println!("--- PART2: {a2:?}");
-    let ca2 = "8549735";
-    let ca2 = ca2.to_string();
+    println!("--- PART2: {a2}");
     if ca2.is_empty() {
         panic!("save the answer in ca2 before you f up");
     }
-    assert_eq!(ca2, a2);
+    assert_eq!(ca2, a2, "answer differs");
 }
 
-#[derive(Clone, Debug)]
-struct Game {
+pub fn get_pb(len: usize, msg: &'static str) -> ProgressBar {
+    let pb = ProgressBar::new(len as u64);
+
+    let pb_style = ProgressStyle::default_bar()
+            .template(
+                        "{spinner:.green} [{elapsed}] {msg} [{wide_bar:.cyan/blue}] ({pos}/{len}|{percent}%) ({per_sec}|{eta})",
+                    )
+        .unwrap()
+        .progress_chars("#>-");
+    pb.set_style(pb_style);
+    pb.set_message(msg);
+    pb.tick();
+
+    pb
+}
+
+#[derive(Debug, Clone, Default)]
+struct ParsedInput {
+    inner: Vec<Inner>,
+}
+
+#[derive(Debug, Clone, Default)]
+struct Inner {
     number: u32,
     winning_numbers: Vec<u32>,
     my_numbers: Vec<u32>,
 }
 
-fn parse(input: &str) -> Vec<Game> {
+impl std::str::FromStr for ParsedInput {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(ParsedInput {
+            inner: parse(s),
+            ..ParsedInput::default()
+        })
+    }
+}
+
+fn parse(input: &str) -> Vec<Inner> {
     input
         .trim()
         .lines()
@@ -85,7 +167,7 @@ fn parse(input: &str) -> Vec<Game> {
                 .map(|it| it.parse().unwrap())
                 .collect();
 
-            Game {
+            Inner {
                 number,
                 winning_numbers,
                 my_numbers,
@@ -94,10 +176,13 @@ fn parse(input: &str) -> Vec<Game> {
         .collect()
 }
 
-fn part1(input: &str) -> String {
-    let games = parse(input);
+fn part1(input: &str) -> impl std::fmt::Debug {
+    let games = input.parse::<ParsedInput>().unwrap();
+    let lines = input.lines().count();
     games
-        .into_iter()
+        .inner
+        .into_par_iter()
+        .progress_with(get_pb(lines, "part 1 w/ {lines} lines"))
         .map(|game| {
             // println!("game: {}", &game.number);
             game.my_numbers
@@ -124,18 +209,19 @@ fn part1(input: &str) -> String {
         .to_string()
 }
 
+use std::sync::{Arc, RwLock};
+
 fn part2(input: &str) -> impl std::fmt::Debug {
-    let mut accesses = Box::new(RefCell::new(HashMap::new()));
+    let mut accesses = Arc::new(RwLock::new(HashMap::new()));
 
-    let mut cache: Box<RefCell<HashMap<u32, Vec<u32>>>> = Box::new(RefCell::new(HashMap::new()));
+    let mut cache: Arc<RwLock<HashMap<u32, Vec<u32>>>> = Arc::new(RwLock::new(HashMap::new()));
+    let _games = input.parse::<ParsedInput>().unwrap();
+    let lines = input.lines().count();
 
-    let _games = parse(input);
-
-    use std::cell::RefCell;
-
-    let mut game_copies = Box::new(RefCell::new(vec![]));
+    let mut game_copies = Arc::new(RwLock::new(vec![]));
 
     let _max = _games
+        .inner
         .iter()
         .max_by(|a, b| a.number.cmp(&b.number))
         .unwrap()
@@ -145,16 +231,18 @@ fn part2(input: &str) -> impl std::fmt::Debug {
 
     let x = _games
         .clone()
+        .inner
         .into_iter()
+        .progress_with(get_pb(lines, "part 2 w/ {lines} lines"))
         .map(|game| {
-            println!("processing game: {}", &game.number);
             accesses
-                .borrow_mut()
+                .write()
+                .unwrap()
                 .entry(game.number)
                 .and_modify(|it: &mut u32| *it += 1_u32)
                 .or_insert(1);
             let mut i = (1..);
-            let copies = match cache.borrow().get(&game.number) {
+            let copies = match cache.read().unwrap().get(&game.number) {
                 Some(hit) => hit.clone(),
                 None => game
                     .winning_numbers
@@ -170,12 +258,12 @@ fn part2(input: &str) -> impl std::fmt::Debug {
                 let index = *c as usize - 1;
                 //             println!("max here: {:?}", (index, _max));
                 if index < _max {
-                    let game_to_push = _games.get(index).unwrap().clone();
+                    let game_to_push = _games.inner.get(index).unwrap().clone();
                     //                 println!("pushing game number: {}", &game_to_push.number);
-                    game_copies.borrow_mut().push(game_to_push);
+                    game_copies.write().unwrap().push(game_to_push);
                 }
             }
-            cache.borrow_mut().insert(game.number, copies.clone());
+            cache.write().unwrap().insert(game.number, copies.clone());
             (game.number, copies)
         })
         // .inspect(|it| {
@@ -191,24 +279,25 @@ fn part2(input: &str) -> impl std::fmt::Debug {
         // )
         // })
         .flat_map(|(it, _)| {
-            let g = game_copies.borrow().clone();
+            let g = game_copies.read().unwrap().clone();
             g.iter()
-                .filter(|&Game { number, .. }| *number == it)
+                .filter(|&Inner { number, .. }| *number == it)
                 .flat_map(|game| {
                     accesses
-                        .borrow_mut()
+                        .write()
+                        .unwrap()
                         .entry(game.number)
                         .and_modify(|it| *it += 1);
                     //                 println!("game (copy): {}", &game.number);
                     let mut i = (1..);
-                    let copies = cache.borrow().get(&game.number).unwrap().clone();
+                    let copies = cache.read().unwrap().get(&game.number).unwrap().clone();
                     for c in copies.iter() {
                         let index = *c as usize - 1;
                         //                     println!("max here: {:?}", (index, _max));
                         if index < _max {
-                            let game_to_push = _games.get(index).unwrap().clone();
+                            let game_to_push = _games.inner.get(index).unwrap().clone();
                             //                         println!("pushing game number: {}", &game_to_push.number);
-                            game_copies.borrow_mut().push(game_to_push);
+                            game_copies.write().unwrap().push(game_to_push);
                         }
                     }
                     copies.into_iter().collect::<Vec<_>>()
@@ -218,20 +307,11 @@ fn part2(input: &str) -> impl std::fmt::Debug {
         //     .inspect(|_| println!("accesses: {:?}", accesses.borrow().clone()))
         .collect::<Vec<_>>();
 
-    // println!("{:?}", &x);
     let x = accesses;
-    // println!("{:?}", &x);
-    let x = x.borrow();
-    // println!("{:?}", &x);
+    let x = x.read().unwrap();
     let x = x.clone();
-    // println!("{:?}", &x);
     let x = x.iter();
-    // println!("{:?}", &x);
-    // let x = x.inspect(|it| println!("{:?}", it));
-    // println!("{:?}", &x);
     let x = x.map(|(k, v)| *v);
-    // println!("{:?}", &x);
     let x = x.sum::<u32>();
-    // println!("{:?}", &x);
     x
 }

@@ -1,5 +1,8 @@
 #![allow(unused)]
 
+use indicatif::*;
+use rayon::prelude::*;
+
 fn main() {
     // i: input
     // e: example
@@ -11,11 +14,15 @@ fn main() {
     let e1 = include_str!("e1.txt").trim();
     let ga1 = "";
     let ga1 = ga1.to_string();
+    let ca1 = "";
+    let ca1 = ca1.to_string();
 
     let i2 = include_str!("i2.txt").trim();
     let e2 = include_str!("e2.txt").trim();
     let ga2 = "";
     let ga2 = ga2.to_string();
+    let ca2 = "";
+    let ca2 = ca2.to_string();
 
     if e1.is_empty() {
         panic!("e1.txt empty dumbass");
@@ -52,8 +59,6 @@ fn main() {
     }
     let a1 = format!("{:?}", part1(i1));
     println!("--- PART1: {a1}");
-    let ca1 = "";
-    let ca1 = ca1.to_string();
     if ca1.is_empty() {
         panic!("save the answer in ca1 before you f up");
     }
@@ -94,8 +99,6 @@ fn main() {
     }
     let a2 = format!("{:?}", part2(i2));
     println!("--- PART2: {a2}");
-    let ca2 = "";
-    let ca2 = ca2.to_string();
     if ca2.is_empty() {
         panic!("save the answer in ca2 before you f up");
     }
@@ -118,26 +121,30 @@ pub fn get_pb(len: usize, msg: &'static str) -> ProgressBar {
     pb
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 struct ParsedInput {
     inner: Vec<Inner>,
-    idx: usize,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 struct Inner {}
 
 impl std::str::FromStr for ParsedInput {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        todo!()
+        Ok(ParsedInput {
+            inner: parse(s),
+            ..ParsedInput::default()
+        })
     }
 }
 
-use indicatif::*;
-use rayon::prelude::*;
+fn parse(input: &str) -> Vec<Inner> {
+    todo!()
+}
 
+// REMEMBER THAT IF THE ANSWER DEPENDS ON PREVIOUS ITERATIONS THEN YOU CANT USE PAR ITER
 fn part1(input: &str) -> impl std::fmt::Debug {
     let lines = input.lines().count();
     input
@@ -149,6 +156,7 @@ fn part1(input: &str) -> impl std::fmt::Debug {
         .collect::<Vec<_>>()
 }
 
+// REMEMBER THAT IF THE ANSWER DEPENDS ON PREVIOUS ITERATIONS THEN YOU CANT USE PAR ITER
 fn part2(input: &str) -> impl std::fmt::Debug {
     let lines = input.lines().count();
     input
