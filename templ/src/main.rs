@@ -20,44 +20,142 @@ fn main() {
     if e1.is_empty() {
         panic!("e1.txt empty dumbass");
     }
-    let ea1 = part1(e1);
+    let ea1 = format!("{:?}", part1(e1));
     assert!(!ga1.is_empty(), "ga1 empty dumbass");
-    assert_eq!(ga1, ea1);
+    assert_eq!(
+        ga1,
+        ea1,
+        "{}",
+        if let (Ok(ga1), Ok(ea1)) = (ga1.parse::<u64>(), ea1.parse::<u64>()) {
+            if ga1 > ea1 {
+                format!("ga1: {ga1} > ea1: {ea1}")
+            } else if ga1 < ea1 {
+                format!("ga1: {ga1} < ea1: {ea1}")
+            } else {
+                unreachable!()
+            }
+        } else if let (Ok(ga1), Ok(ea1)) = (ga1.parse::<f64>(), ea1.parse::<f64>()) {
+            if ga1 > ea1 {
+                format!("ga1: {ga1} > ea1: {ea1}")
+            } else if ga1 < ea1 {
+                format!("ga1: {ga1} < ea1: {ea1}")
+            } else {
+                unreachable!()
+            }
+        } else {
+            format!("parsing failed")
+        }
+    );
+    println!("ga1: {ga1} == ea1: {ea1}");
     if i1.is_empty() {
         panic!("i1.txt empty dumbass");
     }
-    let a1 = part1(i1);
+    let a1 = format!("{:?}", part1(i1));
     println!("--- PART1: {a1}");
     let ca1 = "";
     let ca1 = ca1.to_string();
     if ca1.is_empty() {
         panic!("save the answer in ca1 before you f up");
     }
-    assert_eq!(ca1, a1);
+    assert_eq!(ca1, a1, "answer differs");
 
     if e2.is_empty() {
         panic!("e2.txt empty dumbass");
     }
-    let ea2 = part2(e2);
+    let ea2 = format!("{:?}", part2(e2));
     assert_ne!(ga2, "", "ga2 empty dumbass");
-    assert_eq!(ga2, ea2);
+    assert_eq!(
+        ga2,
+        ea2,
+        "{}",
+        if let (Ok(ga2), Ok(ea2)) = (ga2.parse::<u64>(), ea2.parse::<u64>()) {
+            if ga2 > ea2 {
+                format!("ga2: {ga2} > ea2: {ea2}")
+            } else if ga2 < ea2 {
+                format!("ga2: {ga2} < ea2: {ea2}")
+            } else {
+                unreachable!()
+            }
+        } else if let (Ok(ga2), Ok(ea2)) = (ga2.parse::<f64>(), ea2.parse::<f64>()) {
+            if ga2 > ea2 {
+                format!("ga2: {ga2} > ea2: {ea2}")
+            } else if ga2 < ea2 {
+                format!("ga2: {ga2} < ea2: {ea2}")
+            } else {
+                unreachable!()
+            }
+        } else {
+            format!("parsing failed")
+        }
+    );
+    println!("ga2: {ga2} == ea2: {ea2}");
     if i2.is_empty() {
         panic!("i2.txt empty dumbass");
     }
-    let a2 = part2(i2);
+    let a2 = format!("{:?}", part2(i2));
     println!("--- PART2: {a2}");
     let ca2 = "";
     let ca2 = ca2.to_string();
     if ca2.is_empty() {
         panic!("save the answer in ca2 before you f up");
     }
-    assert_eq!(ca2, a2);
+    assert_eq!(ca2, a2, "answer differs");
 }
 
-fn part1(input: &str) -> String {
-    "unimplemented!(\"part 1\")".to_string()
+pub fn get_pb(len: usize, msg: &'static str) -> ProgressBar {
+    let pb = ProgressBar::new(len as u64);
+
+    let pb_style = ProgressStyle::default_bar()
+            .template(
+                        "{spinner:.green} [{elapsed}] {msg} [{wide_bar:.cyan/blue}] ({pos}/{len}|{percent}%) ({per_sec}|{eta})",
+                    )
+        .unwrap()
+        .progress_chars("#>-");
+    pb.set_style(pb_style);
+    pb.set_message(msg);
+    pb.tick();
+
+    pb
 }
 
-fn part2(input: &str) -> String {
-    "unimplemented!(\"part 2\")".to_string()
+#[derive(Debug, Clone)]
+struct ParsedInput {
+    inner: Vec<Inner>,
+    idx: usize,
+}
+
+#[derive(Debug, Clone)]
+struct Inner {}
+
+impl std::str::FromStr for ParsedInput {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        todo!()
+    }
+}
+
+use indicatif::*;
+use rayon::prelude::*;
+
+fn part1(input: &str) -> impl std::fmt::Debug {
+    let lines = input.lines().count();
+    input
+        .parse::<ParsedInput>()
+        .unwrap()
+        .inner
+        .into_par_iter()
+        .progress_with(get_pb(lines, "part 1 w/ {lines} lines"))
+        .collect::<Vec<_>>()
+}
+
+fn part2(input: &str) -> impl std::fmt::Debug {
+    let lines = input.lines().count();
+    input
+        .parse::<ParsedInput>()
+        .unwrap()
+        .inner
+        .into_par_iter()
+        .progress_with(get_pb(lines, "part 1 w/ {lines} lines"))
+        .collect::<Vec<_>>()
 }
