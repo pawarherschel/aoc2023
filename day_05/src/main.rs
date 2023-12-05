@@ -2,7 +2,7 @@
 
 use indicatif::*;
 use itertools::Itertools;
-use rayon::prelude::*;
+use rayon::{collections::linked_list, prelude::*};
 use std::{
     char::REPLACEMENT_CHARACTER,
     collections::{
@@ -296,67 +296,50 @@ fn parse(input: &str) -> Inner {
 fn part1(input: &str) -> impl std::fmt::Debug {
     let lines = input.lines().count();
     let ParsedInput { seeds, inner } = input.parse::<ParsedInput>().unwrap();
+
+    let seed = "seed".to_string();
+    let soil = "soil".to_string();
+    let fertilizer = "fertilizer".to_string();
+    let water = "water".to_string();
+    let light = "light".to_string();
+    let temperature = "temperature".to_string();
+    let humidity = "humidity".to_string();
+    let location = "location".to_string();
+
+    let seed_to_soil = inner.get(&(seed.clone(), soil.clone())).unwrap();
+    let soil_to_fertilizer = inner.get(&(soil.clone(), fertilizer.clone())).unwrap();
+    let fertilizer_to_water = inner.get(&(fertilizer.clone(), water.clone())).unwrap();
+    let water_to_light = inner.get(&(water.clone(), light.clone())).unwrap();
+    let light_to_temperature = inner.get(&(light.clone(), temperature.clone())).unwrap();
+    let temperature_to_humidity = inner.get(&(temperature.clone(), humidity.clone())).unwrap();
+    let humidity_to_location = inner.get(&(humidity.clone(), location.clone())).unwrap();
+
     seeds
         .into_iter()
         .progress_with(get_pb(lines, format!("part 1 w/ {lines} lines")))
-        .min_by_key(|seed| {
-            let starting_key = inner.keys().find(|(from, _)| from == "seed").unwrap();
+        .map(|seed_num| {
+            let soil = seed_to_soil.get(&seed_num).unwrap_or(&seed_num).clone();
+            let fertilizer = soil_to_fertilizer.get(&soil).unwrap_or(&soil).clone();
+            let water = fertilizer_to_water
+                .get(&fertilizer)
+                .unwrap_or(&fertilizer)
+                .clone();
+            let light = water_to_light.get(&water).unwrap_or(&water).clone();
+            let temperature = light_to_temperature.get(&light).unwrap_or(&light).clone();
+            let humidity = temperature_to_humidity
+                .get(&temperature)
+                .unwrap_or(&temperature)
+                .clone();
+            let location = humidity_to_location
+                .get(&humidity)
+                .unwrap_or(&humidity)
+                .clone();
 
-            let mut keys_from = vec![];
-            let mut keys_to = vec![];
-
-            inner.keys().for_each(|(from, to)| {
-                keys_from.push(from.clone());
-                keys_to.push(to.clone());
-            });
-
-            let mut maps = vec![];
-
-            for idx in 0..inner.len() {
-                let map = inner
-                    .get(&(keys_from[idx].clone(), keys_to[idx].clone()))
-                    .unwrap()
-                    .clone();
-                maps.push(map);
-            }
-
-            let (froms, tos, maps) = (keys_from, keys_to, maps);
-
-            let starting_idx = froms
-                .iter()
-                .find_position(|v| v == &&"seed".to_string())
-                .unwrap()
-                .0;
-            // .find("seed".to_string()).unwrap();
-
-            let next_index = |s: String| froms.iter().find_position(|v| v == &&s).unwrap().0;
-            let next = (
-                next_index(tos[starting_idx].clone()),
-                tos[starting_idx].clone(),
-                froms
-                    .iter()
-                    .find_position(|v| v == &&tos[starting_idx])
-                    .unwrap()
-                    .1
-                    .clone(),
-                maps[starting_idx].clone(),
-            );
-            // let find_next_k_to =
-            //     |from: String| keys.iter().find(|(k, _)| k == &from).unwrap().1.clone();
-
-            // let find_next_v_to = |from: i64, map: &HashMap<i64, i64>| {
-            //     map.get(&from).unwrap_or_else(|| &from).to_owned()
-            // };
-
-            // let get_hashmap = |from: String, to: String| inner.get(&(from, to)).unwrap();
-
-            // let (k_prev_from, k_prev_to) = starting_key.clone();
-            // // let next_node =
-
-            // let from_seed_to_whatever1 = |seed: i64, map: &HashMap<i64, i64>| {
-            //     map.get(&seed).unwrap_or_else(|| &seed).to_owned()
-            // };
+            location
         })
+        .inspect(|it| println!("{}", it))
+        .min()
+        .unwrap()
 }
 
 // REMEMBER THAT IF THE ANSWER DEPENDS ON PREVIOUS ITERATIONS THEN YOU CANT USE PAR ITER
