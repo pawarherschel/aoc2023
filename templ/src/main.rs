@@ -2,6 +2,7 @@
 
 use indicatif::*;
 use rayon::prelude::*;
+use std::time::Instant;
 
 fn main() {
     // i: input
@@ -27,8 +28,10 @@ fn main() {
     if e1.is_empty() {
         panic!("e1.txt empty dumbass");
     }
-    let ea1 = format!("{:?}", part1(e1));
     assert!(!ga1.is_empty(), "ga1 empty dumbass");
+    let now = Instant::now();
+    let ea1 = format!("{:?}", part1(e1));
+    println!("ea1 took {:?}", now.elapsed());
     assert_eq!(
         ga1,
         ea1,
@@ -57,7 +60,9 @@ fn main() {
     if i1.is_empty() {
         panic!("i1.txt empty dumbass");
     }
+    let now = Instant::now();
     let a1 = format!("{:?}", part1(i1));
+    println!("a1 took {:?}\n\n\n", now.elapsed());
     println!("--- PART1: {a1}");
     if ca1.is_empty() {
         panic!("save the answer in ca1 before you f up");
@@ -67,8 +72,10 @@ fn main() {
     if e2.is_empty() {
         panic!("e2.txt empty dumbass");
     }
+    assert!(!ga2.is_empty(), "ga2 empty dumbass");
+    let now = Instant::now();
     let ea2 = format!("{:?}", part2(e2));
-    assert_ne!(ga2, "", "ga2 empty dumbass");
+    println!("ea2 took {:?}", now.elapsed());
     assert_eq!(
         ga2,
         ea2,
@@ -97,7 +104,9 @@ fn main() {
     if i2.is_empty() {
         panic!("i2.txt empty dumbass");
     }
+    let now = Instant::now();
     let a2 = format!("{:?}", part2(i2));
+    println!("a2 took {:?}", now.elapsed());
     println!("--- PART2: {a2}");
     if ca2.is_empty() {
         panic!("save the answer in ca2 before you f up");
@@ -105,8 +114,9 @@ fn main() {
     assert_eq!(ca2, a2, "answer differs");
 }
 
-pub fn get_pb(len: usize, msg: &'static str) -> ProgressBar {
+pub fn get_pb(len: usize, msg: String) -> ProgressBar {
     let pb = ProgressBar::new(len as u64);
+    let msg: &'static str = msg.clone().leak();
 
     let pb_style = ProgressStyle::default_bar()
             .template(
@@ -152,7 +162,7 @@ fn part1(input: &str) -> impl std::fmt::Debug {
         .unwrap()
         .inner
         .into_par_iter()
-        .progress_with(get_pb(lines, "part 1 w/ {lines} lines"))
+        .progress_with(get_pb(lines, format!("part 1 w/ {lines} lines")))
         .collect::<Vec<_>>()
 }
 
@@ -164,6 +174,6 @@ fn part2(input: &str) -> impl std::fmt::Debug {
         .unwrap()
         .inner
         .into_par_iter()
-        .progress_with(get_pb(lines, "part 1 w/ {lines} lines"))
+        .progress_with(get_pb(lines, format!("part 2 w/ {lines} lines")))
         .collect::<Vec<_>>()
 }

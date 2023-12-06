@@ -3,14 +3,7 @@
 use indicatif::*;
 use itertools::Itertools;
 use rayon::{collections::linked_list, prelude::*};
-use std::{
-    char::REPLACEMENT_CHARACTER,
-    collections::{
-        btree_map::{Keys, Values},
-        HashMap,
-    },
-    time::Instant,
-};
+use std::{char::REPLACEMENT_CHARACTER, collections::HashMap, time::Instant};
 
 fn main() {
     // i: input
@@ -191,10 +184,37 @@ impl std::str::FromStr for ParsedInput {
                              range_len,
                          }| {
                             let range_to_add = 0..range_len;
-                            range_to_add
+                            let remaped = range_to_add
                                 .into_iter()
                                 .map(|v| (dst_range_start + v, src_range_start + v))
-                                .collect::<HashMap<i64, i64>>()
+                                // .inspect(|(k, v)| {
+                                //     if k == &50 {
+                                //         println!("!!!{k} -> {v}")
+                                //     }
+                                // })
+                                // .inspect(|(k, v)| {
+                                //     if k == &51 {
+                                //         println!("!!!{k} -> {v}")
+                                //     }
+                                // })
+                                // .inspect(|(k, v)| {
+                                //     if k == &52 {
+                                //         println!("!!!{k} -> {v}")
+                                //     }
+                                // })
+                                // .inspect(|(k, v)| {
+                                //     if k == &53 {
+                                //         println!("!!!{k} -> {v}")
+                                //     }
+                                // })
+                                // .inspect(|_| println!())
+                                .collect::<Vec<_>>();
+                            let mut remaper = HashMap::new();
+                            remaped
+                                .iter()
+                                .for_each(|(k, v)| assert!(remaper.insert(*k, *v).is_none()));
+
+                            remaper
                         },
                     )
                     .collect::<HashMap<i64, i64>>();
@@ -307,6 +327,14 @@ fn part1(input: &str) -> impl std::fmt::Debug {
     let location = "location".to_string();
 
     let seed_to_soil = inner.get(&(seed.clone(), soil.clone())).unwrap();
+    println!(
+        "{}",
+        &seed_to_soil
+            .iter()
+            .map(|(k, v)| format!("{k} -> {v}"))
+            .collect::<Vec<String>>()
+            .join("\n")
+    );
     let soil_to_fertilizer = inner.get(&(soil.clone(), fertilizer.clone())).unwrap();
     let fertilizer_to_water = inner.get(&(fertilizer.clone(), water.clone())).unwrap();
     let water_to_light = inner.get(&(water.clone(), light.clone())).unwrap();
@@ -318,26 +346,35 @@ fn part1(input: &str) -> impl std::fmt::Debug {
         .into_iter()
         .progress_with(get_pb(lines, format!("part 1 w/ {lines} lines")))
         .map(|seed_num| {
+            dbg!(&seed_num);
             let soil = seed_to_soil.get(&seed_num).unwrap_or(&seed_num).clone();
+            dbg!(&soil);
             let fertilizer = soil_to_fertilizer.get(&soil).unwrap_or(&soil).clone();
+            dbg!(&fertilizer);
             let water = fertilizer_to_water
                 .get(&fertilizer)
                 .unwrap_or(&fertilizer)
                 .clone();
+            dbg!(&water);
             let light = water_to_light.get(&water).unwrap_or(&water).clone();
+            dbg!(&light);
             let temperature = light_to_temperature.get(&light).unwrap_or(&light).clone();
+            dbg!(&temperature);
             let humidity = temperature_to_humidity
                 .get(&temperature)
                 .unwrap_or(&temperature)
                 .clone();
+            dbg!(&humidity);
             let location = humidity_to_location
                 .get(&humidity)
                 .unwrap_or(&humidity)
                 .clone();
+            dbg!(&location);
 
+            dbg!();
             location
         })
-        .inspect(|it| println!("{}", it))
+        // .inspect(|_| println!())
         .min()
         .unwrap()
 }
